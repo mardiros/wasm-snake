@@ -50,8 +50,21 @@ impl Snake {
         let new_item = {
             let item = { self.snake.first().unwrap() };
             match direction {
-                Direction::Up => Item::at_position(item.x, item.y + 1),
-                Direction::Down => Item::at_position(item.x, item.y - 1),
+                Direction::Up => Item::at_position(item.x, item.y - 1),
+                Direction::Down => Item::at_position(item.x, item.y + 1),
+                Direction::Left => Item::at_position(item.x - 1, item.y),
+                Direction::Right => Item::at_position(item.x + 1, item.y),
+            }
+        };
+        self.snake.insert(0, new_item);
+    }
+    fn move_(&mut self, direction: Direction) {
+        let new_item = {
+            self.snake.pop().unwrap();
+            let item = { self.snake.first().unwrap() };
+            match direction {
+                Direction::Up => Item::at_position(item.x, item.y - 1),
+                Direction::Down => Item::at_position(item.x, item.y + 1),
                 Direction::Left => Item::at_position(item.x - 1, item.y),
                 Direction::Right => Item::at_position(item.x + 1, item.y),
             }
@@ -106,19 +119,34 @@ impl Store {
         }
     }
     fn move_up(&mut self) {
+        js! {
+            console.log("move Up");
+        };
         self.direction = Direction::Up
     }
     fn move_down(&mut self) {
+        js! {
+            console.log("move Down");
+        };
         self.direction = Direction::Down
     }
     fn move_left(&mut self) {
+        js! {
+            console.log("move Left");
+        };
         self.direction = Direction::Left
     }
     fn move_right(&mut self) {
+        js! {
+            console.log("move Right");
+        };
         self.direction = Direction::Right
     }
     fn pause_toggle(&mut self) {
         self.playing = !self.playing
+    }
+    fn play(&mut self) {
+        self.snake.move_(self.direction);
     }
 }
 
@@ -150,7 +178,7 @@ impl Canvas {
         context.set_transform(border, 0f64, 0f64, border, 0f64, 0f64);
 
         js! {
-            console.log(" canvas initialized" );
+            console.log("canvas initialized" );
         };
         Canvas { store, canvas }
     }
@@ -193,9 +221,6 @@ impl Canvas {
                 f64::from(1),
             );
         }
-        //js! {
-        //    console.log("canvas repaint" );
-        //};
     }
 }
 
@@ -240,6 +265,7 @@ impl Animation {
             self.time_stamp = time;
             let mut c = self.canvas.borrow_mut();
             if c.store.playing && !c.store.game_over {
+                c.store.play();
                 c.repaint();
             }
         }
@@ -251,7 +277,7 @@ impl Animation {
 }
 
 fn main() {
-    let store = Store::new(30, 20);
+    let store = Store::new(80, 45);
     let canvas = Canvas::new("#game", store);
     Animation::new(canvas);
 }
