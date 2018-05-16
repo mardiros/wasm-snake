@@ -1,10 +1,9 @@
-
 #[macro_use]
 extern crate stdweb;
 
-
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::vec::Vec;
 
 use stdweb::traits::*;
 use stdweb::unstable::TryInto;
@@ -12,19 +11,53 @@ use stdweb::web::event::KeyDownEvent;
 use stdweb::web::html_element::CanvasElement;
 use stdweb::web::{document, window, CanvasRenderingContext2d};
 
-
 struct Item {
     x: u32,
     y: u32,
 }
 
+struct Snake {
+    snake: Vec<Item>,
+}
 
-fn rand_32(max: u32) -> u32{
+fn rand_32(max: u32) -> u32 {
     let v = js!(return Math.random());
     let v: f64 = v.try_into().unwrap();
     let v = (v * max as f64).ceil();
     let v: u32 = v as u32;
     v
+}
+
+impl Snake {
+    fn new(max_x: u32, max_y: u32) -> Snake {
+        let mut x: u32 = rand_32(max_x / 2);
+        if x < 3 {
+            x = 3;
+        }
+        let x2 = x - 1;
+        let x3 = x - 2;
+        let max_y = max_y / 2;
+        let y: u32 = rand_32(max_y) + max_y - 1;
+        let snake: Vec<Item> = vec![Item { x, y }, Item { x: x2, y }, Item { x: x3, y }];
+        Snake { snake }
+    }
+
+    fn items(&self) -> &[Item] {
+        &self.snake.as_slice()
+    }
+
+    fn grow(&mut self, direction: Direction) {
+        let new_item = {
+            let item = { self.snake.first().unwrap() };
+            match direction {
+                Direction::Up => Item::at_position(item.x, item.y + 1),
+                Direction::Down => Item::at_position(item.x, item.y - 1),
+                Direction::Left => Item::at_position(item.x - 1, item.y),
+                Direction::Right => Item::at_position(item.x + 1, item.y),
+            }
+        };
+        self.snake.insert(0, new_item);
+    }
 }
 
 impl Item {
@@ -33,17 +66,24 @@ impl Item {
         let y: u32 = rand_32(max_y);
         Item { x, y }
     }
+    fn at_position(x: u32, y: u32) -> Item {
+        Item { x, y }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 enum Direction {
-    Up, Down, Left, Right
+    Up,
+    Down,
+    Left,
+    Right,
 }
 
 struct Store {
     width: u32,
     height: u32,
     speed: f64,
+    snake: Snake,
     item: Item,
     playing: bool,
     game_over: bool,
@@ -52,10 +92,13 @@ struct Store {
 
 impl Store {
     fn new(width: u32, height: u32) -> Store {
+        let snake = Snake::new(width, height);
+        let item = Item::new(width, height);
         Store {
             width,
             height,
-            item: Item::new(width, height),
+            item,
+            snake,
             speed: 300.0,
             playing: true,
             game_over: false,
@@ -75,9 +118,8 @@ impl Store {
         self.direction = Direction::Right
     }
     fn pause_toggle(&mut self) {
-        self.playing = !self.playing        
+        self.playing = !self.playing
     }
-
 }
 
 struct Canvas {
@@ -110,10 +152,7 @@ impl Canvas {
         js! {
             console.log(" canvas initialized" );
         };
-        Canvas {
-            store,
-            canvas,
-        }
+        Canvas { store, canvas }
     }
 
     fn repaint(&mut self) {
@@ -146,14 +185,19 @@ impl Canvas {
             f64::from(1),
         );
 
+        for item in self.store.snake.items() {
+            context.fill_rect(
+                f64::from(item.x),
+                f64::from(item.y),
+                f64::from(1),
+                f64::from(1),
+            );
+        }
         //js! {
         //    console.log("canvas repaint" );
         //};
-
     }
 }
-
-
 
 struct Animation {
     canvas: Rc<RefCell<Canvas>>,
@@ -205,7 +249,6 @@ impl Animation {
         });
     }
 }
-
 
 fn main() {
     let store = Store::new(30, 20);
