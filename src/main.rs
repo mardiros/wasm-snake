@@ -117,7 +117,7 @@ impl Store {
             height,
             item,
             snake,
-            speed: 300.0,
+            speed: 150.0,
             playing: true,
             game_over: false,
             direction: Direction::Right,
