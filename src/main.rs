@@ -327,7 +327,7 @@ impl Animation {
 }
 
 fn main() {
-    let store = Store::new(80, 45);
+    let store = Store::new(40, 25);
     let canvas = Canvas::new("#game", store);
     Animation::new(canvas);
 }
