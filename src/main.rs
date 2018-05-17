@@ -59,8 +59,9 @@ impl Snake {
         };
         self.snake.insert(0, new_item);
     }
-    fn move_(&mut self, direction: Direction) {
-        let new_item = {
+
+    fn move_(&mut self, direction: Direction, item: &Item) -> Result<bool, ()> {
+        let snake_head = {
             self.snake.pop().unwrap();
             let item = { self.snake.first().unwrap() };
             match direction {
@@ -70,12 +71,26 @@ impl Snake {
                 Direction::Right => Item::at_position(item.x + 1, item.y),
             }
         };
-        self.snake.insert(0, new_item);
+        let growing = &snake_head == item;
+        if growing {
+            self.grow(direction);
+        }
+        else if self.contains(&snake_head) {
+            return Err(());
+        }
+        self.snake.insert(0, snake_head);
+        Ok(growing)
     }
 
     fn contains(&self, item: &Item) -> bool {
         self.snake.contains(item)
     }
+
+    fn validate(&self, width: u32, height: u32) -> bool {
+        let head = self.snake.first().unwrap();
+        return  head.x >= 1 && head.x <= width && head.y >= 1 && head.y <= height;
+    }
+
 }
 
 impl Item {
@@ -163,12 +178,25 @@ impl Store {
         self.playing = !self.playing
     }
     fn play(&mut self) {
-        self.snake.move_(self.direction);
-        if self.snake.contains(&self.item) {
-            self.snake.grow(self.direction);
-            self.item = Item::new(self.width, self.height);
+        match self.snake.move_(self.direction, &self.item) {
+            Ok(growing) => {
+                if !self.snake.validate(self.width, self.height) {
+                    js! {
+                        console.log("Snake hit the border");
+                    };
+                    self.game_over = true;
+                }
+                if growing {
+                    self.item = Item::new(self.width, self.height);
+                }
+            },
+            Err(_) => {
+                js! {
+                    console.log("Snake bite its queue");
+                };
+                self.game_over = true;
+            }
         }
-
     }
 }
 
