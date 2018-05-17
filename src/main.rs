@@ -74,8 +74,7 @@ impl Snake {
         let growing = &snake_head == item;
         if growing {
             self.grow(direction);
-        }
-        else if self.contains(&snake_head) {
+        } else if self.contains(&snake_head) {
             return Err(());
         }
         self.snake.insert(0, snake_head);
@@ -88,9 +87,8 @@ impl Snake {
 
     fn validate(&self, width: u32, height: u32) -> bool {
         let head = self.snake.first().unwrap();
-        return  head.x >= 1 && head.x <= width && head.y >= 1 && head.y <= height;
+        return head.x >= 1 && head.x <= width && head.y >= 1 && head.y <= height;
     }
-
 }
 
 impl Item {
@@ -140,7 +138,7 @@ impl Store {
     }
     fn move_up(&mut self) {
         if self.direction == Direction::Down {
-            return
+            return;
         }
         js! {
             console.log("move Up");
@@ -149,7 +147,7 @@ impl Store {
     }
     fn move_down(&mut self) {
         if self.direction == Direction::Up {
-            return
+            return;
         }
         js! {
             console.log("move Down");
@@ -158,7 +156,7 @@ impl Store {
     }
     fn move_left(&mut self) {
         if self.direction == Direction::Right {
-            return
+            return;
         }
         js! {
             console.log("move Left");
@@ -167,7 +165,7 @@ impl Store {
     }
     fn move_right(&mut self) {
         if self.direction == Direction::Left {
-            return
+            return;
         }
         js! {
             console.log("move Right");
@@ -189,7 +187,7 @@ impl Store {
                 if growing {
                     self.item = Item::new(self.width, self.height);
                 }
-            },
+            }
             Err(_) => {
                 js! {
                     console.log("Snake bite its queue");
