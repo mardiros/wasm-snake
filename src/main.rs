@@ -124,24 +124,36 @@ impl Store {
         }
     }
     fn move_up(&mut self) {
+        if self.direction == Direction::Down {
+            return
+        }
         js! {
             console.log("move Up");
         };
         self.direction = Direction::Up
     }
     fn move_down(&mut self) {
+        if self.direction == Direction::Up {
+            return
+        }
         js! {
             console.log("move Down");
         };
         self.direction = Direction::Down
     }
     fn move_left(&mut self) {
+        if self.direction == Direction::Right {
+            return
+        }
         js! {
             console.log("move Left");
         };
         self.direction = Direction::Left
     }
     fn move_right(&mut self) {
+        if self.direction == Direction::Left {
+            return
+        }
         js! {
             console.log("move Right");
         };
