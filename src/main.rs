@@ -11,6 +11,7 @@ use stdweb::web::event::KeyDownEvent;
 use stdweb::web::html_element::CanvasElement;
 use stdweb::web::{document, window, CanvasRenderingContext2d};
 
+#[derive(Clone, Copy, PartialEq)]
 struct Item {
     x: u32,
     y: u32,
@@ -70,6 +71,10 @@ impl Snake {
             }
         };
         self.snake.insert(0, new_item);
+    }
+
+    fn contains(&self, item: &Item) -> bool {
+        self.snake.contains(item)
     }
 }
 
@@ -147,6 +152,11 @@ impl Store {
     }
     fn play(&mut self) {
         self.snake.move_(self.direction);
+        if self.snake.contains(&self.item) {
+            self.snake.grow(self.direction);
+            self.item = Item::new(self.width, self.height);
+        }
+
     }
 }
 
