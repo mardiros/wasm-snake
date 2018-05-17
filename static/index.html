@@ -24,9 +24,20 @@
     </script>
 </head>
 <body>
-    <div style="background-color: #eee; padding: 5px; height: 675px;">
+    <div id="content">
         <canvas id="game"></canvas>
     </div>
     <script src="wasm-snake.js"></script>
+    <style>
+    #content {
+        display: flex;
+        text-align: center;
+        margin-top: 50vh;
+        transform: translateY(-50%);
+    }
+    #game {
+        margin: auto;
+    }
+    </style>
 </body>
 </html>
