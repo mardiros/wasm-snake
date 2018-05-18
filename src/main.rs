@@ -43,20 +43,44 @@ impl Board {
 
         // Borders
         context.fill_rect(
-            f64::from(0),
-            f64::from(0),
-            f64::from(self.width + 2),
-            f64::from(self.height + 2),
+            0f64,
+            0f64,
+            (self.width + 2) as f64,
+            (self.height + 2) as f64,
         );
 
         context.set_fill_style_color("#ffe");
 
         context.fill_rect(
-            f64::from(1),
-            f64::from(1),
-            f64::from(self.width),
-            f64::from(self.height),
+            1f64,
+            1f64,
+            (self.width) as f64,
+            (self.height) as f64,
         );
+    }
+}
+
+
+
+struct Score {
+    score: u32,
+}
+
+impl Score {
+    fn new() -> Self {
+        Score { score: 0 }
+    }
+    fn up(&mut self) {
+        self.score = self.score + 1;
+    }
+    fn paint(&self, context: &CanvasRenderingContext2d) {
+        context.set_fill_style_color("#fff");
+
+        context.fill_text("█████", 5., 0., None);
+
+        let score = self.score.to_string();
+        context.set_fill_style_color("#333");
+        context.fill_text(score.as_str(), 5., 0., None);
     }
 }
 
@@ -172,6 +196,7 @@ struct Store {
     board: Board,
     snake: Snake,
     item: Item,
+    score: Score,
     playing: bool,
     game_over: bool,
     direction: Direction,
@@ -182,10 +207,12 @@ impl Store {
         let board = Board::new(width, height);
         let snake = Snake::new(&board);
         let item = Item::new(&board);
+        let score = Score::new();
         Store {
             board,
             snake,
             item,
+            score,
             speed: 150.0,
             play_time_stamp: 0.0,
             paint_time_stamp: 0.0,
@@ -260,6 +287,7 @@ impl Store {
                 }
                 if growing {
                     self.item = Item::new(&self.board);
+                    self.score.up();
                 }
             }
             Err(_) => {
@@ -271,9 +299,17 @@ impl Store {
         }
     }
     fn paint(&self, context: &CanvasRenderingContext2d) {
+        let scaling: f64 = 10.;
+        context.set_transform(scaling, 0f64, 0f64, scaling, 0f64, 0f64);
+
         self.board.paint(&context);
         self.item.paint(&context);
         self.snake.paint(&context);
+
+        let moving_h = ((self.board.width + 2) as f64) * scaling;
+        let moving_v = ((self.board.height) as f64) * scaling;
+        context.set_transform(2f64, 0f64, 0f64, 2f64, moving_h, moving_v);
+        self.score.paint(&context);
     }
 }
 
@@ -291,22 +327,15 @@ impl Canvas {
             .try_into()
             .unwrap();
 
+        let score_width = 10;  // should be in the store.
         let scaling = 10;
 
-        let context: CanvasRenderingContext2d = canvas.get_context().unwrap();
-
-        let border = scaling as f64;
-        let canvas_width = store.board.width * scaling;
+        let canvas_width = store.board.width * scaling + score_width * scaling;
         let canvas_height = store.board.height * scaling;
 
         canvas.set_width(canvas_width + 2 * scaling);
         canvas.set_height(canvas_height + 2 * scaling);
 
-        context.set_transform(border, 0f64, 0f64, border, 0f64, 0f64);
-
-        js! {
-            console.log("canvas initialized" );
-        };
         Canvas { store, canvas }
     }
 
