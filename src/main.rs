@@ -102,10 +102,10 @@ impl Item {
     fn paint(&self, context: &CanvasRenderingContext2d) {
         context.set_fill_style_color("#333");
         context.fill_rect(
-            f64::from(self.x),
-            f64::from(self.y),
-            f64::from(1),
-            f64::from(1),
+            self.x as f64,
+            self.y as f64,
+            1f64,
+            1f64,
         );
     }
 }
@@ -178,10 +178,10 @@ impl Snake {
     fn paint(&self, context: &CanvasRenderingContext2d) {
         for item in self.items() {
             context.fill_rect(
-                f64::from(item.x),
-                f64::from(item.y),
-                f64::from(1),
-                f64::from(1),
+                item.x as f64,
+                item.y as f64,
+                1f64,
+                1f64,
             );
         }
 
