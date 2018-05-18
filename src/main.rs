@@ -11,6 +11,16 @@ use stdweb::web::event::KeyDownEvent;
 use stdweb::web::html_element::CanvasElement;
 use stdweb::web::{document, window, CanvasRenderingContext2d};
 
+
+fn rand_32(max: u32) -> u32 {
+    let v = js!(return Math.random());
+    let v: f64 = v.try_into().unwrap();
+    let v = (v * max as f64).ceil();
+    let v: u32 = v as u32;
+    v
+}
+
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 enum Direction {
     Up,
@@ -78,14 +88,6 @@ impl Item {
 
 struct Snake {
     snake: Vec<Item>,
-}
-
-fn rand_32(max: u32) -> u32 {
-    let v = js!(return Math.random());
-    let v: f64 = v.try_into().unwrap();
-    let v = (v * max as f64).ceil();
-    let v: u32 = v as u32;
-    v
 }
 
 impl Snake {
@@ -164,6 +166,9 @@ impl Snake {
 
 struct Store {
     speed: f64,
+    play_time_stamp: f64,
+    paint_time_stamp: f64,
+
     board: Board,
     snake: Snake,
     item: Item,
@@ -182,6 +187,8 @@ impl Store {
             snake,
             item,
             speed: 150.0,
+            play_time_stamp: 0.0,
+            paint_time_stamp: 0.0,
             playing: true,
             game_over: false,
             direction: Direction::Right,
@@ -191,36 +198,52 @@ impl Store {
         if self.direction == Direction::Down {
             return;
         }
+        if self.play_time_stamp >= self.paint_time_stamp {
+            return;
+        }
         js! {
             console.log("move Up");
         };
+        self.play_time_stamp = self.paint_time_stamp;
         self.direction = Direction::Up
     }
     fn move_down(&mut self) {
         if self.direction == Direction::Up {
             return;
         }
+        if self.play_time_stamp >= self.paint_time_stamp {
+            return;
+        }
         js! {
             console.log("move Down");
         };
+        self.play_time_stamp = self.paint_time_stamp;
         self.direction = Direction::Down
     }
     fn move_left(&mut self) {
         if self.direction == Direction::Right {
             return;
         }
+        if self.play_time_stamp >= self.paint_time_stamp {
+            return;
+        }
         js! {
             console.log("move Left");
         };
+        self.play_time_stamp = self.paint_time_stamp;
         self.direction = Direction::Left
     }
     fn move_right(&mut self) {
         if self.direction == Direction::Left {
             return;
         }
+        if self.play_time_stamp >= self.paint_time_stamp {
+            return;
+        }
         js! {
             console.log("move Right");
         };
+        self.play_time_stamp = self.paint_time_stamp;
         self.direction = Direction::Right
     }
     fn pause_toggle(&mut self) {
@@ -295,7 +318,6 @@ impl Canvas {
 
 struct Animation {
     canvas: Rc<RefCell<Canvas>>,
-    time_stamp: f64,
 }
 
 impl Animation {
@@ -303,7 +325,6 @@ impl Animation {
         let canvas_rc = Rc::new(RefCell::new(canvas));
         let animation = Animation {
             canvas: canvas_rc.clone(),
-            time_stamp: 0.0,
         };
         let canvas_for_action = canvas_rc.clone();
 
@@ -323,16 +344,15 @@ impl Animation {
             if !c.store.playing {
                 c.store.pause_toggle()
             }
-            c.repaint();
         });
 
         animation.play(400.0);
     }
 
-    fn play(mut self, time: f64) {
-        if time - self.time_stamp > self.canvas.borrow().store.speed {
-            self.time_stamp = time;
+    fn play(self, time: f64) {
+        if time - self.canvas.borrow().store.paint_time_stamp > self.canvas.borrow().store.speed {
             let mut c = self.canvas.borrow_mut();
+            c.store.paint_time_stamp = time;
             if c.store.playing && !c.store.game_over {
                 c.store.play();
                 c.repaint();
