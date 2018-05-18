@@ -11,10 +11,40 @@ use stdweb::web::event::KeyDownEvent;
 use stdweb::web::html_element::CanvasElement;
 use stdweb::web::{document, window, CanvasRenderingContext2d};
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+struct Board {
+    width: u32,
+    height: u32,
+}
+
+impl Board {
+    fn new(width: u32, height: u32) -> Self {
+        Board { width, height }
+    }
+}
+
 #[derive(Clone, Copy, PartialEq)]
 struct Item {
     x: u32,
     y: u32,
+}
+
+impl Item {
+    fn new(board: &Board) -> Item {
+        let x: u32 = rand_32(board.width);
+        let y: u32 = rand_32(board.height);
+        Item { x, y }
+    }
+    fn at_position(x: u32, y: u32) -> Item {
+        Item { x, y }
+    }
 }
 
 struct Snake {
@@ -30,14 +60,14 @@ fn rand_32(max: u32) -> u32 {
 }
 
 impl Snake {
-    fn new(max_x: u32, max_y: u32) -> Snake {
-        let mut x: u32 = rand_32(max_x / 2);
+    fn new(board: &Board) -> Snake {
+        let mut x: u32 = rand_32(board.width / 2);
         if x < 3 {
             x = 3;
         }
         let x2 = x - 1;
         let x3 = x - 2;
-        let max_y = max_y / 2;
+        let max_y = board.height / 2;
         let y: u32 = rand_32(max_y) + max_y - 1;
         let snake: Vec<Item> = vec![Item { x, y }, Item { x: x2, y }, Item { x: x3, y }];
         Snake { snake }
@@ -85,35 +115,15 @@ impl Snake {
         self.snake.contains(item)
     }
 
-    fn validate(&self, width: u32, height: u32) -> bool {
+    fn validate(&self, board: &Board) -> bool {
         let head = self.snake.first().unwrap();
-        return head.x >= 1 && head.x <= width && head.y >= 1 && head.y <= height;
+        return head.x >= 1 && head.x <= board.width && head.y >= 1 && head.y <= board.height;
     }
-}
-
-impl Item {
-    fn new(max_x: u32, max_y: u32) -> Item {
-        let x: u32 = rand_32(max_x);
-        let y: u32 = rand_32(max_y);
-        Item { x, y }
-    }
-    fn at_position(x: u32, y: u32) -> Item {
-        Item { x, y }
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
 }
 
 struct Store {
-    width: u32,
-    height: u32,
     speed: f64,
+    board: Board,
     snake: Snake,
     item: Item,
     playing: bool,
@@ -123,13 +133,13 @@ struct Store {
 
 impl Store {
     fn new(width: u32, height: u32) -> Store {
-        let snake = Snake::new(width, height);
-        let item = Item::new(width, height);
+        let board = Board::new(width, height);
+        let snake = Snake::new(&board);
+        let item = Item::new(&board);
         Store {
-            width,
-            height,
-            item,
+            board,
             snake,
+            item,
             speed: 150.0,
             playing: true,
             game_over: false,
@@ -178,14 +188,14 @@ impl Store {
     fn play(&mut self) {
         match self.snake.move_(self.direction, &self.item) {
             Ok(growing) => {
-                if !self.snake.validate(self.width, self.height) {
+                if !self.snake.validate(&self.board) {
                     js! {
                         console.log("Snake hit the border");
                     };
                     self.game_over = true;
                 }
                 if growing {
-                    self.item = Item::new(self.width, self.height);
+                    self.item = Item::new(&self.board);
                 }
             }
             Err(_) => {
@@ -217,8 +227,8 @@ impl Canvas {
         let context: CanvasRenderingContext2d = canvas.get_context().unwrap();
 
         let border = scaling as f64;
-        let canvas_width = store.width * scaling;
-        let canvas_height = store.height * scaling;
+        let canvas_width = store.board.width * scaling;
+        let canvas_height = store.board.height * scaling;
 
         canvas.set_width(canvas_width + 2 * scaling);
         canvas.set_height(canvas_height + 2 * scaling);
@@ -239,8 +249,8 @@ impl Canvas {
         context.fill_rect(
             f64::from(0),
             f64::from(0),
-            f64::from(self.store.width + 2),
-            f64::from(self.store.height + 2),
+            f64::from(self.store.board.width + 2),
+            f64::from(self.store.board.height + 2),
         );
 
         context.set_fill_style_color("#ffe");
@@ -248,8 +258,8 @@ impl Canvas {
         context.fill_rect(
             f64::from(1),
             f64::from(1),
-            f64::from(self.store.width),
-            f64::from(self.store.height),
+            f64::from(self.store.board.width),
+            f64::from(self.store.board.height),
         );
 
         context.set_fill_style_color("#333");
