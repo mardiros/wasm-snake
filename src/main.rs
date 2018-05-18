@@ -346,7 +346,7 @@ impl Animation {
             }
         });
 
-        animation.play(400.0);
+        animation.play(120.0);
     }
 
     fn play(self, time: f64) {
