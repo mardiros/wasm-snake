@@ -28,6 +28,26 @@ impl Board {
     fn new(width: u32, height: u32) -> Self {
         Board { width, height }
     }
+    fn paint(&self, context: &CanvasRenderingContext2d) {
+        context.set_fill_style_color("#333");
+
+        // Borders
+        context.fill_rect(
+            f64::from(0),
+            f64::from(0),
+            f64::from(self.width + 2),
+            f64::from(self.height + 2),
+        );
+
+        context.set_fill_style_color("#ffe");
+
+        context.fill_rect(
+            f64::from(1),
+            f64::from(1),
+            f64::from(self.width),
+            f64::from(self.height),
+        );
+    }
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -44,6 +64,15 @@ impl Item {
     }
     fn at_position(x: u32, y: u32) -> Item {
         Item { x, y }
+    }
+    fn paint(&self, context: &CanvasRenderingContext2d) {
+        context.set_fill_style_color("#333");
+        context.fill_rect(
+            f64::from(self.x),
+            f64::from(self.y),
+            f64::from(1),
+            f64::from(1),
+        );
     }
 }
 
@@ -118,6 +147,18 @@ impl Snake {
     fn validate(&self, board: &Board) -> bool {
         let head = self.snake.first().unwrap();
         return head.x >= 1 && head.x <= board.width && head.y >= 1 && head.y <= board.height;
+    }
+
+    fn paint(&self, context: &CanvasRenderingContext2d) {
+        for item in self.items() {
+            context.fill_rect(
+                f64::from(item.x),
+                f64::from(item.y),
+                f64::from(1),
+                f64::from(1),
+            );
+        }
+
     }
 }
 
@@ -206,6 +247,11 @@ impl Store {
             }
         }
     }
+    fn paint(&self, context: &CanvasRenderingContext2d) {
+        self.board.paint(&context);
+        self.item.paint(&context);
+        self.snake.paint(&context);
+    }
 }
 
 struct Canvas {
@@ -243,42 +289,7 @@ impl Canvas {
 
     fn repaint(&mut self) {
         let context: CanvasRenderingContext2d = self.canvas.get_context().unwrap();
-        context.set_fill_style_color("#333");
-
-        // Borders
-        context.fill_rect(
-            f64::from(0),
-            f64::from(0),
-            f64::from(self.store.board.width + 2),
-            f64::from(self.store.board.height + 2),
-        );
-
-        context.set_fill_style_color("#ffe");
-
-        context.fill_rect(
-            f64::from(1),
-            f64::from(1),
-            f64::from(self.store.board.width),
-            f64::from(self.store.board.height),
-        );
-
-        context.set_fill_style_color("#333");
-
-        context.fill_rect(
-            f64::from(self.store.item.x),
-            f64::from(self.store.item.y),
-            f64::from(1),
-            f64::from(1),
-        );
-
-        for item in self.store.snake.items() {
-            context.fill_rect(
-                f64::from(item.x),
-                f64::from(item.y),
-                f64::from(1),
-                f64::from(1),
-            );
-        }
+        self.store.paint(&context);
     }
 }
 
