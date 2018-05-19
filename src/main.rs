@@ -213,7 +213,7 @@ impl Store {
             snake,
             item,
             score,
-            speed: 150.0,
+            speed: 90.0,
             play_time_stamp: 0.0,
             paint_time_stamp: 0.0,
             playing: true,
@@ -370,12 +370,9 @@ impl Animation {
                 }
                 &_ => (),
             }
-            if !c.store.playing {
-                c.store.pause_toggle()
-            }
         });
 
-        animation.play(120.0);
+        animation.play(1000.0);
     }
 
     fn play(self, time: f64) {
