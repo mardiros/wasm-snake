@@ -5,7 +5,7 @@
 
 This project has been inspired from [wasm-tetris](https://github.com/xuu/wasm-tetris/).
 
-Is is a copy the structure of the game and write another one with it.
+It is a copy of the structure of the game and write another one.
 
 ## Development setup
 
