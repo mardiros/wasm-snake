@@ -1,5 +1,8 @@
 # Snake Game on WebAssembly written in Rust
 
+![Screenshot](/screenshot.png)
+
+
 This project has been inspired from [wasm-tetris](https://github.com/xuu/wasm-tetris/).
 
 Is is a copy the structure of the game and write another one with it.
